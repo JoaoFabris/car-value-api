@@ -7,12 +7,26 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 describe('AuthService', () => {
   let service: AuthService;
   let fakeUsersService: Partial<UsersService>;
+  let users: User[];
 
   beforeEach(async () => {
+    // Array em memória zerado antes de cada teste
+    users = [];
+
     fakeUsersService = {
-      find: () => Promise.resolve([]),
-      create: (email: string, password: string) =>
-        Promise.resolve({ id: 1, email, password } as User),
+      find: (email: string) => {
+        const filteredUsers = users.filter((user) => user.email === email);
+        return Promise.resolve(filteredUsers);
+      },
+      create: (email: string, password: string) => {
+        const user = {
+          id: Math.floor(Math.random() * 999),
+          email,
+          password,
+        } as User;
+        users.push(user);
+        return Promise.resolve(user);
+      },
     };
 
     const module = await Test.createTestingModule({
@@ -28,7 +42,7 @@ describe('AuthService', () => {
     service = module.get(AuthService);
   });
 
-  it('can create an instance of auth service', async () => {
+  it('can create an instance of auth service', () => {
     expect(service).toBeDefined();
   });
 
@@ -48,12 +62,21 @@ describe('AuthService', () => {
   });
 
   it('throws if an invalid password is provided', async () => {
-    fakeUsersService.find = () =>
-      Promise.resolve([
-        { email: 'asdf@asdf.com', password: 'laskdjf' } as User,
-      ]);
+    // Cadastra primeiro para ter um usuário salvo no array em memória
+    await service.signup('asdf@asdf.com', 'senhaCorreta');
+
+    // Tenta logar com a senha incorreta
     await expect(
-      service.signin('laskdjf@alskdfj.com', 'passowrd'),
+      service.signin('asdf@asdf.com', 'senhaIncorreta'),
     ).rejects.toThrow(BadRequestException);
+  });
+
+  it('returns a user if correct password is provided', async () => {
+    await service.signup('asdf@asdf.com', 'senhaCorreta');
+
+    const user = await service.signin('asdf@asdf.com', 'senhaCorreta');
+
+    expect(user).toBeDefined();
+    expect(user.email).toEqual('asdf@asdf.com');
   });
 });

@@ -1,20 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-const cookieSession = require('cookie-session');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(
-    cookieSession({
-      keys: ['asdwdawd'],
-    }),
-  );
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // removes properties from the JSON that are not defined in our DTO
-    }),
-  );
   await app.listen(process.env.PORT ?? 3000);
+  // validation pipe and cookie session is define in app.module, so it can run in others env, like so test env
 }
 bootstrap();
+// our main is like this, cause this solution is more 'nest approach'. so in module 13 , class 115, he sad we can choose from this our the 'easy way'
