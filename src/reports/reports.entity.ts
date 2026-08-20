@@ -6,6 +6,9 @@ export class Report {
   @PrimaryGeneratedColumn() // marks a column as the table's primary key and tells TypeORM to auto-generate its value
   id!: number;
 
+  @Column({ default: false })
+  approved!: boolean;
+
   @Column()
   price!: number;
 
